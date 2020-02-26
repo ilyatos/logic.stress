@@ -1,5 +1,5 @@
 package client
 
-type Message struct {
+type Info struct {
 	Message string `json:"message"`
 }

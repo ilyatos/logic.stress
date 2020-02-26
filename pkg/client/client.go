@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 )
@@ -13,6 +14,18 @@ type Client struct {
 	BaseUrl    *url.URL
 	Bearer     string
 	HttpClient *http.Client
+}
+
+func NewClient(baseUrl *url.URL, bearer string, httpClient *http.Client) *Client {
+	if httpClient == nil {
+		httpClient = http.DefaultClient
+	}
+
+	return &Client{
+		BaseUrl:    baseUrl,
+		Bearer:     bearer,
+		HttpClient: httpClient,
+	}
 }
 
 func (c *Client) newRequest(method, path string, body interface{}) (*http.Request, error) {
@@ -46,7 +59,11 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("doing request error: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
 
 	err = json.NewDecoder(resp.Body).Decode(v)
 	return resp, err

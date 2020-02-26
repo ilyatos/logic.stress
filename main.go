@@ -1,8 +1,12 @@
 package main
 
+import (
+	"github.com/joho/godotenv"
+	"log"
+)
+
 func main() {
-	//url, err := url.Parse(logicHost)
-	//if err != nil {
-	//	log.Fatalln(err)
-	//}
+	if err := godotenv.Load(); err != nil {
+		log.Fatalln(err)
+	}
 }

@@ -15,13 +15,11 @@ import (
 	"time"
 )
 
-var ticker *time.Ticker
 var usersCount uint
 var launchesCount uint
 var host string
 
 func init() {
-	ticker = time.NewTicker(2 * time.Second)
 	flag.UintVar(&usersCount, "u", 1, "Number of users")
 	flag.UintVar(&launchesCount, "l", 1, "Number of launches that will be performed for each user")
 	flag.StringVar(&host, "host", "http://logic.hacktory.ai", "Logic host to stress")
@@ -46,7 +44,6 @@ func main() {
 		go run(c, "test"+strconv.Itoa(i)+"a", wg)
 	}
 	wg.Wait()
-	ticker.Stop()
 	fmt.Println("FINISHED")
 }
 
@@ -80,10 +77,13 @@ func run(c *client.Client, subdomain string, wg *sync.WaitGroup) {
 }
 
 func waitForCompletedStatus(c *client.Client, user *client.User) {
+	ticker := time.NewTicker(2 * time.Second)
 	for range ticker.C {
 		st, _ := c.GetLabStatus(user)
+
 		helpers.PrintStructureWithFields(st)
 		if st.Status == 100 {
+			ticker.Stop()
 			break
 		}
 	}

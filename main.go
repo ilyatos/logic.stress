@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/ilyatos/logic.stress/pkg/client"
@@ -65,25 +66,33 @@ func run(c *client.Client, subdomain string, wg *sync.WaitGroup) {
 			log.Fatalln(err)
 		}
 
-		waitForCompletedStatus(c, user)
-
-		err = c.StopLab(user)
+		err = waitForCompletedStatus(c, user, true)
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
+		} else {
+			err = c.StopLab(user)
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
 
-		waitForCompletedStatus(c, user)
+		waitForCompletedStatus(c, user, false)
 	}
 }
 
-func waitForCompletedStatus(c *client.Client, user *client.User) {
+func waitForCompletedStatus(c *client.Client, user *client.User, isStarting bool) error {
 	ticker := time.NewTicker(2 * time.Second)
 	for range ticker.C {
 		st, _ := c.GetLabStatus(user)
 		helpers.PrintLabState(user, st)
+		if isStarting && (st.State == "stop" || st.State == "stopping" || st.State == "stopped") {
+			return errors.New("unexpected stopping is occurred")
+		}
 		if st.Status == 100 {
 			ticker.Stop()
 			break
 		}
 	}
+
+	return nil
 }

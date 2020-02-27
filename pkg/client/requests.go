@@ -4,17 +4,6 @@ import (
 	"net/http"
 )
 
-func (c *Client) Index() (*Info, error) {
-	req, err := c.newRequest(http.MethodGet, "/", nil, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var message *Info
-	_, err = c.do(req, &message)
-	return message, err
-}
-
 func (c *Client) GetUser(subdomain string) (*User, error) {
 	req, err := c.newRequest(http.MethodGet, "/users/"+subdomain, nil, nil)
 	if err != nil {

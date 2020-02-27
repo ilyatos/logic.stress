@@ -80,8 +80,7 @@ func waitForCompletedStatus(c *client.Client, user *client.User) {
 	ticker := time.NewTicker(2 * time.Second)
 	for range ticker.C {
 		st, _ := c.GetLabStatus(user)
-
-		helpers.PrintStructureWithFields(st)
+		helpers.PrintLabState(user, st)
 		if st.Status == 100 {
 			ticker.Stop()
 			break

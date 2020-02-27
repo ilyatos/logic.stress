@@ -15,3 +15,6 @@ build-windows:
 
 build-darwin:
 	GOOS=darwin GOARCH=amd64 go build -o $(BINARY_NAME_DARWIN) -v $(SRC_DIRECTORY)
+
+clean:
+	find ./bin -perm +100 -type f -delete

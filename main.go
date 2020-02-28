@@ -13,9 +13,17 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
+type atomicCount uint32
+
+func (ac *atomicCount) increment() {
+	atomic.AddUint32((*uint32)(ac), 1)
+}
+
+var failedLaunchesCount atomicCount
 var usersCount uint
 var launchesCount uint
 var host string
@@ -45,7 +53,7 @@ func main() {
 		go run(c, "test"+strconv.Itoa(i)+"a", wg)
 	}
 	wg.Wait()
-	fmt.Println("FINISHED")
+	fmt.Println("FINISHED! Failed starts:", failedLaunchesCount)
 }
 
 func run(c *client.Client, subdomain string, wg *sync.WaitGroup) {
@@ -66,7 +74,7 @@ func run(c *client.Client, subdomain string, wg *sync.WaitGroup) {
 			log.Fatalln(err)
 		}
 
-		err = waitForCompletedStatus(c, user, true)
+		err = waitForCompletedStatus(c, user, i, true)
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -76,16 +84,17 @@ func run(c *client.Client, subdomain string, wg *sync.WaitGroup) {
 			}
 		}
 
-		waitForCompletedStatus(c, user, false)
+		waitForCompletedStatus(c, user, i, false)
 	}
 }
 
-func waitForCompletedStatus(c *client.Client, user *client.User, isStarting bool) error {
+func waitForCompletedStatus(c *client.Client, user *client.User, launch int, isStarting bool) error {
 	ticker := time.NewTicker(2 * time.Second)
 	for range ticker.C {
 		st, _ := c.GetLabStatus(user)
-		helpers.PrintLabState(user, st)
+		helpers.PrintLabState(user, launch, st)
 		if isStarting && (st.State == "stop" || st.State == "stopping" || st.State == "stopped") {
+			failedLaunchesCount.increment()
 			return errors.New("unexpected stopping is occurred")
 		}
 		if st.Status == 100 {

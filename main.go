@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ilyatos/logic.stress/pkg/client"
-	"github.com/ilyatos/logic.stress/pkg/helpers"
 	"github.com/joho/godotenv"
 	"log"
 	"net"
@@ -73,18 +72,22 @@ func run(c *client.Client, subdomain string, wg *sync.WaitGroup) {
 		if err != nil {
 			log.Fatalln(err)
 		}
+		log.Printf("Start! User – %s, Launch – %d\n", user.Subdomain, i)
 
 		err = waitForCompletedStatus(c, user, i, true)
 		if err != nil {
 			log.Println(err)
 		} else {
+			log.Printf("Start is succeeded! User – %s, Launch – %d\n", user.Subdomain, i)
 			err = c.StopLab(user)
 			if err != nil {
 				log.Fatalln(err)
 			}
 		}
 
+		log.Printf("Stop! User – %s, Launch – %d\n", user.Subdomain, i)
 		waitForCompletedStatus(c, user, i, false)
+		log.Printf("Stop is succeeded! User – %s, Launch – %d\n", user.Subdomain, i)
 	}
 }
 
@@ -98,7 +101,6 @@ func waitForCompletedStatus(c *client.Client, user *client.User, launch int, isS
 			goto GetLabStatus
 		}
 
-		helpers.PrintLabState(user, launch, st)
 		if isStarting && (st.State == "stop" || st.State == "stopping" || st.State == "stopped") {
 			failedLaunchesCount.increment()
 			return errors.New("unexpected stopping is occurred")

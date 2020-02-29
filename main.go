@@ -91,7 +91,13 @@ func run(c *client.Client, subdomain string, wg *sync.WaitGroup) {
 func waitForCompletedStatus(c *client.Client, user *client.User, launch int, isStarting bool) error {
 	ticker := time.NewTicker(2 * time.Second)
 	for range ticker.C {
-		st, _ := c.GetLabStatus(user)
+	GetLabStatus:
+		st, err := c.GetLabStatus(user)
+		if err != nil {
+			log.Println(user, err)
+			goto GetLabStatus
+		}
+
 		helpers.PrintLabState(user, launch, st)
 		if isStarting && (st.State == "stop" || st.State == "stopping" || st.State == "stopped") {
 			failedLaunchesCount.increment()

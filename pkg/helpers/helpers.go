@@ -3,6 +3,7 @@ package helpers
 import (
 	"fmt"
 	"github.com/ilyatos/logic.stress/pkg/client"
+	"github.com/ilyatos/logic.stress/pkg/formatters"
 )
 
 func PrintLabState(u *client.User, launch int, ls *client.LabStatus) {
@@ -10,5 +11,5 @@ func PrintLabState(u *client.User, launch int, ls *client.LabStatus) {
 }
 
 func PrintStructureWithFields(v interface{}) {
-	fmt.Printf("%+v\n", v)
+	fmt.Printf(formatters.StructWithProperties()+"\n", v)
 }
